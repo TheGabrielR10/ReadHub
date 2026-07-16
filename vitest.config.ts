@@ -1,6 +1,8 @@
 import { defineConfig, mergeConfig } from "vitest/config";
 
-import { sharedVitestConfig } from "@readhub/config/vitest.shared";
+// Ruta relativa (no el specifier de paquete "@readhub/config/vitest.shared"):
+// ver el comentario en packages/config/vitest.shared.ts.
+import { sharedVitestConfig } from "./packages/config/vitest.shared";
 
 // Config raíz — conveniencia para `npm run test:watch` (observa TODO el
 // monorepo a la vez durante desarrollo local). La ejecución "real" en CI y

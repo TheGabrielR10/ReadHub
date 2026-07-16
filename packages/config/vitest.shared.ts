@@ -21,6 +21,11 @@ export const sharedVitestConfig: UserConfig = {
   test: {
     environment: "node",
     passWithNoTests: true,
-    setupFiles: ["@readhub/config/vitest.setup"],
+    // Ruta relativa, NO el specifier de paquete "@readhub/config/vitest.setup":
+    // Vite resuelve ese specifier a través de node_modules (aunque sea un
+    // symlink de workspace) y lo externaliza, cargando el .ts con el loader
+    // nativo de Node — que revienta con ERR_UNKNOWN_FILE_EXTENSION en Node 20
+    // (CI). Una ruta relativa evita esa externalización por completo.
+    setupFiles: ["../config/vitest.setup.ts"],
   },
 };

@@ -15,7 +15,12 @@
       "Bash(xargs cat)",
       "Bash(gh auth *)",
       "Bash(gh secret *)",
-      "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)",
+      "PowerShell(git push -u origin session-6/testing-ci-cd 2>&1)",
+      "PowerShell($gitPath = \\(Get-Command git -ErrorAction SilentlyContinue\\).Source; if \\(-not $gitPath\\) { $gitPath = \"C:\\\\Program Files\\\\Git\\\\bin\\\\git.exe\" }; Write-Output $gitPath; Test-Path $gitPath)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Git\\\\bin\\\\git.exe\" push -u origin session-6/testing-ci-cd 2>&1)",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)"
     ]
   },
   "enabledMcpjsonServers": [

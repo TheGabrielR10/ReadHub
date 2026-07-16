@@ -5,8 +5,6 @@
   "type": "module",
   "exports": {
     "./tsconfig.base.json": "./tsconfig.base.json",
-    "./eslint.base.mjs": "./eslint.base.mjs",
-    "./vitest.shared": "./vitest.shared.ts",
-    "./vitest.setup": "./vitest.setup.ts"
+    "./eslint.base.mjs": "./eslint.base.mjs"
   }
 }
