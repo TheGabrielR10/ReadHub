@@ -1,0 +1,9 @@
+{
+  "name": "@readhub/config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint.base.mjs": "./eslint.base.mjs"
+  }
+}

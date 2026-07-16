@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew install *)",
+      "Bash(claude mcp *)",
+      "PowerShell($old = \"$env:USERPROFILE\\\\.claude\\\\projects\\\\-Users-thegabrielr10-Documents-10-Curso-de-IA--Claude--00-ProyectoDEMO\"; $new = \"$env:USERPROFILE\\\\.claude\\\\projects\\\\c--Users-Maxserin-Documents-10-Curso-de-IA--Claude--00-ProyectoDEMO\"; \"===== ANTIGUO =====\"; Get-ChildItem -Recurse $old -ErrorAction SilentlyContinue | Select-Object LastWriteTime, Length, Name | Sort-Object LastWriteTime; \"===== ACTUAL =====\"; Get-ChildItem -Recurse $new -ErrorAction SilentlyContinue | Select-Object LastWriteTime, Length, Name | Sort-Object LastWriteTime)",
+      "PowerShell($old = \"$env:USERPROFILE\\\\.claude\\\\projects\\\\-Users-thegabrielr10-Documents-10-Curso-de-IA--Claude--00-ProyectoDEMO\"; $new = \"$env:USERPROFILE\\\\.claude\\\\projects\\\\c--Users-Maxserin-Documents-10-Curso-de-IA--Claude--00-ProyectoDEMO\"; Get-ChildItem $old | Where-Object { $_.Name -ne 'memory' } | ForEach-Object { Copy-Item $_.FullName -Destination $new -Recurse -Force }; \"== Resultado en carpeta ACTUAL ==\"; Get-ChildItem $new | Select-Object LastWriteTime, Length, Name)",
+      "PowerShell(winget install --id OpenJS.NodeJS.LTS -e --source winget --accept-package-agreements --accept-source-agreements --disable-interactivity)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; npm install --no-audit --no-fund 2>&1 | Select-Object -Last 6)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; npx tsc --noEmit -p apps\\\\mcp\\\\tsconfig.json; \"mcp tsc exit=$LASTEXITCODE\")",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; node \"C:\\\\Users\\\\Maxserin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Maxserin-Documents-10-Curso-de-IA--Claude--00-ProyectoDEMO\\\\fc78fd94-cd00-4f8f-93dd-9d7d56058cfc\\\\scratchpad\\\\mcp-smoke.mjs\")",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; npm run build 2>&1 | Select-Object -Last 60)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

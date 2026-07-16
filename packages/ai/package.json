@@ -1,0 +1,17 @@
+{
+  "name": "@readhub/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
+    "@huggingface/transformers": "^4.2.0",
+    "@readhub/database": "*",
+    "@readhub/types": "*",
+    "@supabase/supabase-js": "^2.47.10",
+    "server-only": "^0.0.1"
+  }
+}

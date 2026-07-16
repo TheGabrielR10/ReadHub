@@ -1,0 +1,29 @@
+{
+  "name": "@readhub/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "readhub-mcp": "src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch --conditions=react-server src/index.ts",
+    "start": "tsx --conditions=react-server src/index.ts",
+    "build": "tsc --noEmit",
+    "lint": "echo \"(mcp) sin lint\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@readhub/ai": "*",
+    "@readhub/database": "*",
+    "@readhub/shared": "*",
+    "@readhub/types": "*",
+    "@supabase/supabase-js": "^2.47.10",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

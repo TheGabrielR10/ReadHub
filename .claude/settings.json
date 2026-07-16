@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node ./__qa_e2e.mjs)"
+    ]
+  }
+}
