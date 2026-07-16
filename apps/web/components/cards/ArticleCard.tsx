@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { cn } from "@readhub/shared/utils";
 
 export interface ArticleCardProps
@@ -27,19 +29,24 @@ export function ArticleCard({
 
 export function ArticleCardImage({
   className,
-  ...props
-}: React.ImgHTMLAttributes<HTMLImageElement>) {
+  src,
+  alt = "",
+}: {
+  className?: string;
+  src: string;
+  alt?: string;
+}) {
   return (
     <div className="relative w-full h-48 overflow-hidden bg-muted group-hover:opacity-90 transition-opacity duration-base">
-      {/* alt="" es un fallback accesible; el llamador lo sobrescribe vía {...props} */}
-      {/* eslint-disable-next-line @next/next/no-img-element -- URLs públicas de Supabase Storage, sin loader de next/image */}
-      <img
-        alt=""
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(min-width: 1024px) 384px, (min-width: 640px) 50vw, 100vw"
         className={cn(
-          "h-full w-full object-cover group-hover:scale-105 transition-transform duration-base",
+          "object-cover group-hover:scale-105 transition-transform duration-base",
           className
         )}
-        {...props}
       />
     </div>
   );

@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Solo importa los íconos de lucide-react realmente usados en cada módulo,
+  // en vez del paquete completo (Sesión 7, auditoría de performance).
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   // Paquetes TS del monorepo que Next debe transpilar (se consumen como fuente).
   transpilePackages: [
     "@readhub/types",

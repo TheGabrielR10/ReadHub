@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { cn } from "@readhub/shared/utils";
 
 export function ArticleContent({
@@ -89,19 +91,28 @@ export function ArticleAuthorInfo({
 
 export function ArticleImage({
   className,
-  ...props
-}: React.ImgHTMLAttributes<HTMLImageElement>) {
+  src,
+  alt = "",
+}: {
+  className?: string;
+  src: string;
+  alt?: string;
+}) {
   return (
-    // alt="" es un fallback accesible; el llamador lo sobrescribe vía {...props}
-    // eslint-disable-next-line @next/next/no-img-element -- URL pública de Supabase Storage, sin loader de next/image
-    <img
-      alt=""
+    <div
       className={cn(
-        "w-full h-56 sm:h-72 md:h-96 object-cover rounded-md shadow-md my-6 sm:my-8",
+        "relative w-full h-56 sm:h-72 md:h-96 rounded-md shadow-md my-6 sm:my-8 overflow-hidden",
         className
       )}
-      {...props}
-    />
+    >
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(min-width: 768px) 768px, 100vw"
+        className="object-cover"
+      />
+    </div>
   );
 }
 
