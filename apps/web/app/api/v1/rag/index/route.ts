@@ -13,6 +13,7 @@ import { createAdminClient } from "@readhub/database/supabase/admin";
 import { indexingService } from "@readhub/ai/indexing.service";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 interface IndexRequestBody {
   articleId?: string;

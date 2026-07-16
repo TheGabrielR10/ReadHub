@@ -9,7 +9,8 @@
       "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; npm install --no-audit --no-fund 2>&1 | Select-Object -Last 6)",
       "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; npx tsc --noEmit -p apps\\\\mcp\\\\tsconfig.json; \"mcp tsc exit=$LASTEXITCODE\")",
       "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; node \"C:\\\\Users\\\\Maxserin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Maxserin-Documents-10-Curso-de-IA--Claude--00-ProyectoDEMO\\\\fc78fd94-cd00-4f8f-93dd-9d7d56058cfc\\\\scratchpad\\\\mcp-smoke.mjs\")",
-      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; npm run build 2>&1 | Select-Object -Last 60)"
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;\" + $env:Path; npm run build 2>&1 | Select-Object -Last 60)",
+      "PowerShell(vercel env pull --help 2>&1)"
     ]
   },
   "enabledMcpjsonServers": [

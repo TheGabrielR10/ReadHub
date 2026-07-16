@@ -11,6 +11,10 @@ import { createClient } from "@readhub/database/supabase/server";
 import { chatService } from "@readhub/ai/chat.service";
 
 export const runtime = "nodejs";
+// La primera carga del modelo de embeddings (cold start) puede tardar hasta
+// ~2 minutos; se pide el máximo permitido para darle margen. En Vercel Hobby
+// el límite real es 60s (Next.js permite declarar más, la plataforma lo acota).
+export const maxDuration = 60;
 
 interface ChatRequestBody {
   query?: string;

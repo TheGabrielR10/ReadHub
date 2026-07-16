@@ -11,10 +11,20 @@ import "server-only";
 // por eso el `import "server-only"`: si alguien lo importa desde un componente de
 // cliente, el build falla en vez de intentar empaquetar el runtime nativo.
 
-import { pipeline, type FeatureExtractionPipeline } from "@huggingface/transformers";
+import os from "node:os";
+import path from "node:path";
+
+import { env, pipeline, type FeatureExtractionPipeline } from "@huggingface/transformers";
 
 export const EMBEDDING_MODEL = "Supabase/gte-small";
 export const EMBEDDING_DIMENSIONS = 384;
+
+// En serverless (Vercel/Lambda) el paquete se despliega en un filesystem de
+// SOLO LECTURA; únicamente el directorio temporal del sistema es escribible.
+// Sin esto, Transformers.js intenta cachear el modelo descargado dentro de su
+// propia carpeta en node_modules y falla con ENOENT en producción. os.tmpdir()
+// resuelve a /tmp en Vercel/Linux y al temp de Windows en desarrollo local.
+env.cacheDir = path.join(os.tmpdir(), "readhub-transformers-cache");
 
 // El pipeline se carga una sola vez (el modelo pesa ~120 MB y se descarga en la
 // primera llamada). Se cachea la promesa para que llamadas concurrentes durante

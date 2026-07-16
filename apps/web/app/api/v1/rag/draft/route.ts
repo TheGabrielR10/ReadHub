@@ -6,6 +6,7 @@ import { createClient } from "@readhub/database/supabase/server";
 import { chatService } from "@readhub/ai/chat.service";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 interface DraftRequestBody {
   topic?: string;
