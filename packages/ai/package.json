@@ -6,6 +6,9 @@
   "exports": {
     "./*": "./*.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
     "@huggingface/transformers": "^4.2.0",
@@ -13,5 +16,8 @@
     "@readhub/types": "*",
     "@supabase/supabase-js": "^2.47.10",
     "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@readhub/config": "*"
   }
 }

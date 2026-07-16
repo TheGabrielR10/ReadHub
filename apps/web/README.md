@@ -193,3 +193,97 @@ La integración con Claude queda **totalmente encapsulada** en `chat.service.ts`
 4. `npm run dev` → el asistente aparece como botón flotante en el dashboard.
 
 > La primera generación de embeddings descarga el modelo (~120 MB) y queda cacheado.
+
+## Testing y CI/CD (Sesión 6)
+
+### Pruebas unitarias (Vitest)
+
+Cada paquete (`packages/shared`, `packages/ai`, `packages/database`) corre sus propias pruebas con Vitest sobre una configuración compartida (`packages/config/vitest.shared.ts`). Desde la raíz del monorepo:
+
+```bash
+npm run test        # turbo run test — todos los paquetes
+npm run test:watch  # modo watch
+```
+
+### Pruebas E2E (Playwright)
+
+Cubren el flujo real de autenticación (login, dashboard, logout, protección de rutas) contra un build de producción real y Supabase real — sin mocks ni atajos.
+
+```bash
+cd apps/web
+cp .env.e2e.example .env.e2e   # completar con un usuario de prueba real
+npx playwright install --with-deps chromium
+npm run build && npm run test:e2e
+```
+
+`.env.e2e` está en `.gitignore` (el repositorio es público): nunca debe commitearse. En CI, las mismas variables se inyectan como GitHub Secrets.
+
+### GitHub Actions
+
+`.github/workflows/ci.yml` corre en cada `pull_request` y en cada `push` a `main`, con tres jobs secuenciales (cada uno depende de que el anterior pase):
+
+1. **Lint, build y pruebas unitarias** — lint → build (incluye chequeo de tipos) → Vitest.
+2. **Pruebas E2E (Playwright)** — instala Chromium, build de producción, corre `auth.spec.ts` contra Supabase real; publica el reporte de Playwright como artefacto si falla.
+3. **Bundle size + Lighthouse (Core Web Vitals)** (Sesión 7) — ver más abajo.
+
+Ninguno de los tres jobs despliega nada — el deploy lo gestiona la integración nativa de Vercel con el repo (ver "Estado del deploy" en la sección de Sesión 7).
+
+Secrets requeridos en **Settings → Secrets and variables → Actions**:
+
+| Secret | Uso |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Build y runtime (cliente/servidor) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Build y runtime (cliente/servidor) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Runtime servidor (administración, validación RLS) |
+| `ANTHROPIC_API_KEY` | Runtime servidor (asistente RAG) |
+| `E2E_USER_EMAIL` | Usuario de prueba real para el login del E2E |
+| `E2E_USER_PASSWORD` | Contraseña del usuario de prueba del E2E |
+
+## Performance y pipeline de Core Web Vitals (Sesión 7)
+
+### Optimizaciones aplicadas
+
+A partir de una auditoría completa de performance (Core Web Vitals, RSC, bundle, imágenes, fuentes, caché, re-renderizados — ver el informe de la Sesión 7), se aplicaron únicamente las optimizaciones de bajo riesgo que no tocan lógica de negocio, el flujo RAG, APIs ni arquitectura:
+
+- **Imágenes de artículos** (`ArticleImage`, `ArticleCardImage`) migradas de `<img>` crudo a `next/image` (`fill` + `sizes`): resize automático, formatos modernos y lazy loading nativo por viewport. Impacto esperado: mejora directa de LCP (la imagen del artículo es el elemento LCP más probable) y de CLS.
+- **`ChatMessage` memoizado** (`React.memo`): el streaming del asistente RAG reemplaza el array completo de mensajes en cada token recibido; sin memo, cada burbuja ya renderizada se re-renderizaba en cada chunk. El reductor (`useChat.ts`) ya preserva la identidad de los mensajes no modificados, así que el memo es efectivo. Impacto esperado: menos jank/INP en respuestas largas del asistente.
+- **`@huggingface/transformers` movido a `dependencies`** en `apps/web/package.json`: estaba en `devDependencies` pese a requerirse en runtime de producción (los 3 route handlers del RAG) — corrige un riesgo real de que el RAG se rompiera en un install de producción que omitiera dev deps.
+- **`experimental.optimizePackageImports: ["lucide-react"]`** en `next.config.ts`: mejora marginal de tree-shaking (ya era efectivo vía imports nombrados, esto lo refuerza a nivel de build).
+
+Optimizaciones identificadas en la auditoría pero **no aplicadas** (requieren decisiones de arquitectura o diseño fuera del alcance de "solo performance"): convertir las páginas del dashboard a Server Components, deduplicar el `useEffect` con guardia `mounted` repetido en 6 archivos, compartir una sola instancia de cliente de Supabase entre tarjetas de artículo, cargar realmente la fuente "Geist Display" referenciada en Tailwind, y reducir las llamadas redundantes a `auth.getUser()` entre el middleware y cada handler/layout (código sensible de autenticación — cambiarlo sin revisión dedicada es un riesgo que no vale la pena para una ganancia de performance).
+
+### Pipeline extendido: bundle size + Lighthouse CI
+
+El job **"Bundle size + Lighthouse (Core Web Vitals)"** se agregó a `.github/workflows/ci.yml` sin tocar ni reemplazar los jobs existentes; solo corre después de que lint/build/unit tests y E2E ya pasaron (evita gastar minutos de CI auditando código que de todas formas fallaría las validaciones funcionales):
+
+1. **Build con análisis de bundle** (`ANALYZE=true npm run build`, `@next/bundle-analyzer` en `next.config.ts`, activo solo con esa variable): genera reportes HTML del bundle de cliente/edge, publicados como artefacto `bundle-analysis`.
+2. **Lighthouse CI** (`lighthouserc.json`): levanta el servidor de producción y audita `/login` y `/register` (las únicas rutas sin autenticación — auditar el dashboard requeriría un flujo de login vía Puppeteer dentro de Lighthouse, fuera de alcance de este laboratorio). Bloquea el job (falla el pipeline) si no se cumplen los umbrales:
+
+   | Métrica | Umbral |
+   | --- | --- |
+   | Performance score | ≥ 0.80 |
+   | LCP | ≤ 2.5 s |
+   | CLS | ≤ 0.1 |
+   | Total Blocking Time | ≤ 300 ms |
+
+   El reporte completo de Lighthouse se publica como artefacto `lighthouse-report` siempre, pase o falle.
+
+Validado en un run real de GitHub Actions (Ubuntu), no simulado: los tres jobs (incluyendo este) pasaron en verde.
+
+### Estado del deploy a Vercel
+
+El deploy a producción sigue gestionado por la integración nativa de Vercel con el repo de GitHub (auto-deploy en cada push), **no** por este pipeline. Agregar un paso `vercel deploy --prod` gated por este workflow es el siguiente paso natural, pero requiere primero **desactivar el auto-deploy nativo de la rama `main` en Vercel** (Project Settings → Git) — de lo contrario ambos mecanismos desplegarían de forma independiente y el gate de CI no bloquearía nada realmente. Variables necesarias para ese paso futuro (Vercel CLI):
+
+| Variable | Origen |
+| --- | --- |
+| `VERCEL_TOKEN` | Token personal, generado en vercel.com/account/tokens (pendiente de agregar) |
+| `VERCEL_ORG_ID` | `.vercel/project.json` (no sensible) |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` (no sensible) |
+
+### Buenas prácticas para mantener el rendimiento
+
+- Cualquier imagen nueva que venga de Supabase Storage debe usar `next/image`, no `<img>`.
+- Los componentes sin `useState`/`useEffect`/manejadores de eventos propios no necesitan `"use client"` — evalúa si pueden ser Server Components antes de agregar la directiva por defecto.
+- Si se agrega un mensaje nuevo al streaming del chat (`useChat.ts`), mantener la invariante de que `patch()` no debe recrear objetos de mensajes no afectados (necesario para que `React.memo` en `ChatMessage` siga siendo efectivo).
+- Antes de agregar una librería pesada, revisar si ya existe una alternativa nativa o una ya usada en el proyecto (ver hallazgo de bundle en la auditoría de Sesión 7).
+- Cualquier cambio en `next.config.ts`/`lighthouserc.json` que relaje los umbrales de Lighthouse debe justificarse explícitamente en el PR — el gate existe para prevenir regresiones silenciosas de Core Web Vitals.

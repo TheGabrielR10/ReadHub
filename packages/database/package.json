@@ -6,10 +6,16 @@
   "exports": {
     "./*": "./*.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "@readhub/types": "*",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.47.10"
+  },
+  "devDependencies": {
+    "@readhub/config": "*"
   },
   "peerDependencies": {
     "next": "15.5.20"

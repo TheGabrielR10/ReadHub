@@ -5,7 +5,7 @@
 //  - la invitación a redactar cuando ningún artículo cubre el tema,
 //  - el borrador de artículo generado, con botón "Copiar".
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Sparkles, Copy, Check, PenLine } from "lucide-react";
 
 import { cn } from "@readhub/shared/utils";
@@ -54,7 +54,13 @@ interface ChatMessageProps {
   onRequestDraft: (topic: string) => void;
 }
 
-export function ChatMessage({ message, onRequestDraft }: ChatMessageProps) {
+// Memoizado: el streaming reemplaza el array completo de `messages` en cada
+// chunk (Sesión 7, auditoría de performance); sin memo, cada burbuja ya
+// renderizada se re-renderiza en cada token recibido de una respuesta larga.
+export const ChatMessage = memo(function ChatMessage({
+  message,
+  onRequestDraft,
+}: ChatMessageProps) {
   const isUser = message.role === "user";
   const isEmptyStreaming = message.streaming && message.content.length === 0;
 
@@ -134,4 +140,4 @@ export function ChatMessage({ message, onRequestDraft }: ChatMessageProps) {
       </div>
     </div>
   );
-}
+});

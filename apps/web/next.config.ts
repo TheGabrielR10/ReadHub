@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+// Reporte visual del bundle (Sesión 7, pipeline de performance). Solo se activa
+// con ANALYZE=true (paso dedicado del workflow de CI); no afecta el build normal.
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
+  // Solo importa los íconos de lucide-react realmente usados en cada módulo,
+  // en vez del paquete completo (Sesión 7, auditoría de performance).
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   // Paquetes TS del monorepo que Next debe transpilar (se consumen como fuente).
   transpilePackages: [
     "@readhub/types",
@@ -22,4 +34,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
