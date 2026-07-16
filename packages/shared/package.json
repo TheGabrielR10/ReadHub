@@ -8,8 +8,14 @@
     "./validators/*": "./validators/*.ts",
     "./constants/*": "./constants/*.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.6.0"
+  },
+  "devDependencies": {
+    "@readhub/config": "*"
   }
 }

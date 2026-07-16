@@ -193,3 +193,42 @@ La integración con Claude queda **totalmente encapsulada** en `chat.service.ts`
 4. `npm run dev` → el asistente aparece como botón flotante en el dashboard.
 
 > La primera generación de embeddings descarga el modelo (~120 MB) y queda cacheado.
+
+## Testing y CI/CD (Sesión 6)
+
+### Pruebas unitarias (Vitest)
+
+Cada paquete (`packages/shared`, `packages/ai`, `packages/database`) corre sus propias pruebas con Vitest sobre una configuración compartida (`packages/config/vitest.shared.ts`). Desde la raíz del monorepo:
+
+```bash
+npm run test        # turbo run test — todos los paquetes
+npm run test:watch  # modo watch
+```
+
+### Pruebas E2E (Playwright)
+
+Cubren el flujo real de autenticación (login, dashboard, logout, protección de rutas) contra un build de producción real y Supabase real — sin mocks ni atajos.
+
+```bash
+cd apps/web
+cp .env.e2e.example .env.e2e   # completar con un usuario de prueba real
+npx playwright install --with-deps chromium
+npm run build && npm run test:e2e
+```
+
+`.env.e2e` está en `.gitignore` (el repositorio es público): nunca debe commitearse. En CI, las mismas variables se inyectan como GitHub Secrets.
+
+### GitHub Actions
+
+`.github/workflows/ci.yml` corre en cada `pull_request` y en cada `push` a `main`: lint → build (incluye chequeo de tipos) → tests unitarios → tests E2E (con el reporte de Playwright publicado como artefacto si falla). No despliega nada — el deploy lo gestiona la integración nativa de Vercel con el repo.
+
+Secrets requeridos en **Settings → Secrets and variables → Actions**:
+
+| Secret | Uso |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Build y runtime (cliente/servidor) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Build y runtime (cliente/servidor) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Runtime servidor (administración, validación RLS) |
+| `ANTHROPIC_API_KEY` | Runtime servidor (asistente RAG) |
+| `E2E_USER_EMAIL` | Usuario de prueba real para el login del E2E |
+| `E2E_USER_PASSWORD` | Contraseña del usuario de prueba del E2E |
