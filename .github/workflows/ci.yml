@@ -6,8 +6,9 @@ on:
     branches: [main]
 
 # Ninguno de estos jobs despliega nada: solo build + verificación (lint, tipos,
-# unit tests, E2E). El deploy real lo maneja Vercel por separado (integración
-# nativa con el repo de GitHub).
+# unit tests, E2E, performance). El deploy real lo maneja Vercel por separado
+# (integración nativa con el repo de GitHub) — ver Sesión 7 en el README para
+# el estado de la integración de un gate de deploy controlado por este pipeline.
 env:
   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -77,4 +78,57 @@ jobs:
         with:
           name: playwright-report
           path: apps/web/playwright-report/
+          retention-days: 7
+
+  performance:
+    name: Bundle size + Lighthouse (Core Web Vitals)
+    # Solo corre después de que lint/tipos/unit tests y E2E ya pasaron — evita
+    # gastar minutos de CI en una auditoría de performance sobre código que de
+    # todas formas no pasaría las validaciones funcionales existentes.
+    needs: [build-and-test, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Build con análisis de bundle
+        working-directory: apps/web
+        env:
+          ANALYZE: "true"
+        run: npm run build
+
+      - name: Publicar reporte de bundle (webpack-bundle-analyzer)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: apps/web/.next/analyze/
+          retention-days: 7
+
+      - name: Iniciar servidor de producción
+        working-directory: apps/web
+        run: nohup npm run start > server.log 2>&1 &
+
+      - name: Esperar a que el servidor esté listo
+        run: npx --yes wait-on http://localhost:3000/login --timeout 60000
+
+      - name: Lighthouse CI (umbrales de Core Web Vitals)
+        working-directory: apps/web
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.json
+
+      - name: Publicar reporte de Lighthouse
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: apps/web/.lighthouseci/
           retention-days: 7
